@@ -6,7 +6,8 @@
     "dev:backend": "bun run --watch src/backend/server.ts",
     "dev:frontend": "vite",
     "dev": "run-p dev:backend dev:frontend",
-    "build": "vite build"
+    "build": "vite build",
+    "sample:videos": "bun run scripts/generate-sample-videos.ts"
   },
   "dependencies": {
     "@types/bun": "^1.3.2",

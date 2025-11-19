@@ -145,6 +145,70 @@ src/
 - Pastas com muitos arquivos: o scan e a comparação podem levar tempo. Use filtros para reduzir o espaço de busca.
 - Thumbnails antigas: são mantidas em `.seamless-thumbnails/` por timestamp; podem ser reutilizadas/inspecionadas.
 
+## Vídeos de Exemplo
+Você pode gerar um conjunto pequeno de vídeos sintéticos para testar a detecção de loops e combinações:
+
+```powershell
+bun run sample:videos
+```
+
+Isto cria a pasta `sample-videos/` com arquivos:
+- `loop_solid_red.mp4`: self-loop perfeito (frame inicial == final)
+- `loop_rotating_square.mp4`: quadrado faz rotação completa (início == fim)
+- `nonloop_transition.mp4`: transição preto→branco (não é loop)
+- `pair_A_end_green.mp4` & `pair_B_start_green.mp4`: combinação A→B deve gerar match alto (último verde → primeiro verde)
+- `diff_resolution_A.mp4` & `diff_resolution_B.mp4`: resoluções diferentes (pulados pelo early-exit)
+- `loop_gradient.mp4`: gradiente animado que retorna ao estado inicial
+- `loop_color_cycle_10s.mp4`: ciclo de cores suave (vermelho→verde→azul→vermelho) (loop)
+- `moving_rectangle_horizontal_20s.mp4`: retângulo percorre a largura e retorna (loop)
+- `bouncing_square_10s.mp4`: quadrado simulando bounce vertical com retorno (loop)
+- `triangle_spin_fade_20s.mp4`: quadrado rotacionando com fade in/out (loop)
+- `overlapping_shapes_transition_10s.mp4`: transição entre dois retângulos coloridos (não loop)
+- `gradient_pulse_10s.mp4`: pulsos de intensidade mantendo início=fim (loop)
+- `multi_morph_shapes_A_10s.mp4`: 6 formas em arranjos segmentados + crossfades (início/fim não sólidos)
+- `multi_morph_shapes_B_10s.mp4`: 5 formas sobre barras SMPTE em arranjos segmentados
+- `multi_morph_shapes_C_10s.mp4`: 4 formas sobre fundo cinza em arranjos segmentados
+
+As séries `multi_morph_shapes_*` usam composição por segmentos (2s) e transições `xfade` para gerar variação espacial sem depender de expressões de tempo complexas (maior compatibilidade com builds FFmpeg no Windows).
+
+## Casos de Teste Recomendados
+Use os arquivos gerados para validar diferentes cenários da aplicação:
+
+### Self-loops (início == fim)
+- `loop_solid_red.mp4`
+- `loop_rotating_square.mp4`
+- `loop_gradient.mp4`
+- `loop_color_cycle_10s.mp4`
+- `moving_rectangle_horizontal_20s.mp4`
+- `bouncing_square_10s.mp4`
+- `triangle_spin_fade_20s.mp4`
+- `gradient_pulse_10s.mp4`
+
+### Pares com match esperado alto
+- `pair_A_end_green.mp4` → `pair_B_start_green.mp4`: último frame verde combina com primeiro frame verde.
+
+### Não-loops / transições
+- `nonloop_transition.mp4`
+- `overlapping_shapes_transition_10s.mp4`
+
+### Resolução diferente (early-exit previsto)
+- `diff_resolution_A.mp4`
+- `diff_resolution_B.mp4`
+
+### Complexidade espacial / falso positivo (segmentos + xfade)
+Não são self-loops perfeitos; úteis para ver se o threshold evita falsos positivos próximos.
+- `multi_morph_shapes_A_10s.mp4`
+- `multi_morph_shapes_B_10s.mp4`
+- `multi_morph_shapes_C_10s.mp4`
+
+### Sugestão de uso
+1. Rode comparação apenas com self-loops para calibrar threshold (ex.: ≥ 87.5).
+2. Acrescente não-loops e verifique queda de score.
+3. Teste pares verdes para confirmar ranking alto e geração de diff (se acima do threshold).
+4. Inclua multi-morph para garantir que mudanças de layout espacial não gerem falsos positivos excessivos.
+
+Use essa pasta para validar filtros, geração de thumbnails e ranking de matches.
+
 ## Licença
 Este projeto é licenciado sob a **GNU Lesser General Public License v3.0 (LGPL-3.0)**.
 
