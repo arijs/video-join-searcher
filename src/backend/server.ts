@@ -1,6 +1,8 @@
 // src/backend/server.ts
 import { serve } from 'bun'
 import { WebSocketServer, WebSocket } from 'ws'
+import { resolve as pathResolve } from 'node:path'
+import { existsSync, statSync } from 'node:fs'
 import handleSelect from './routes/select'
 import handleApplyFilters from './routes/applyFilters'
 import handleCompare from './routes/compare'
@@ -15,6 +17,8 @@ import handleList from './routes/list'
 // ===================================================================
 class AppState {
   selectedFolder = ''
+  /** Pasta raiz configurada (modo isolamento). Se vazio, comportamento padrão do sistema. */
+  rootFolder = ''
   
   private _allVideos: VideoFile[] = []
   private _filteredVideos: VideoFile[] = []
@@ -27,6 +31,31 @@ class AppState {
 }
 
 export const state = new AppState()
+
+// Detecta pasta raiz via argumento --root= ou variável de ambiente LOOP_ROOT_DIR
+function resolveRootFromArgs(): string {
+  const arg = Bun.argv.find(a => a.startsWith('--root='))
+  const envRoot = process.env.LOOP_ROOT_DIR
+  const raw = envRoot || (arg ? arg.slice('--root='.length) : '')
+  if (!raw) return ''
+  try {
+    const resolved = pathResolve(raw)
+    if (!existsSync(resolved) || !statSync(resolved).isDirectory()) {
+      console.error('[rootFolder] Caminho inválido informado, ignorando:', raw)
+      return ''
+    }
+    return resolved
+  } catch (e) {
+    console.error('[rootFolder] Erro ao validar pasta raiz:', e)
+    return ''
+  }
+}
+
+state.rootFolder = resolveRootFromArgs()
+if (state.rootFolder) {
+  console.log('📁 Pasta raiz limitada:', state.rootFolder)
+  // Se já havia selectedFolder fora desse escopo, será ignorado até que select defina algo dentro dela.
+}
 
 // ===================================================================
 // Controle de pausa/cancelamento da comparação
@@ -72,7 +101,7 @@ serve({
     const url = new URL(req.url)
 
     // Rotas API
-    if (url.pathname === '/api/list' && req.method === 'GET') return handleList(url.searchParams.get('path') || '')
+    if (url.pathname === '/api/list' && req.method === 'GET') return handleList(url.searchParams.get('path') || '', state.rootFolder)
     if (url.pathname === '/api/select' && req.method === 'POST') return handleSelect(req)
     if (url.pathname === '/api/apply-filters' && req.method === 'POST') return handleApplyFilters(req)
     if (url.pathname === '/api/compare' && req.method === 'POST') return handleCompare(req)

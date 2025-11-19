@@ -39,6 +39,7 @@ bun install
 ## Executando em desenvolvimento
 ```powershell
 bun run dev
+bun run dev --root "D:\\videos-teste"  # modo restrito à pasta
 ```
 - Frontend (Vite): http://localhost:5173
 - Backend HTTP: http://localhost:3001
@@ -126,7 +127,7 @@ src/
 ```
 
 ## Como funciona (resumo técnico)
-- `server.ts` expõe HTTP (3001) e WebSocket (3002) e mantém estado (`selectedFolder`, `allVideos`, `filteredVideos`).
+- `server.ts` expõe HTTP (3001) e WebSocket (3002) e mantém estado (`selectedFolder`, `allVideos`, `filteredVideos`). Suporta modo de raiz restrita via argumento `--root=CAMINHO` ou variável de ambiente `LOOP_ROOT_DIR`; quando ativo, a navegação/listagem fica confinada à pasta informada.
 - `scanHandler.ts` varre a pasta e, para arquivos de vídeo suportados, chama `getVideoMetadata` que usa `ffprobe` (duração e resolução).
 - `filterHandler.ts` aplica regras de regex conforme especificado (primeira regra define modo base) e filtros por tamanho/datas/duração/aspect/resolução.
 - `thumbnails.ts` cria os PNGs usando `ffmpeg`, respeitando as regras de dimensionamento.
@@ -144,6 +145,7 @@ src/
 - Permissões: no Linux/macOS, verifique permissões de leitura na pasta selecionada.
 - Pastas com muitos arquivos: o scan e a comparação podem levar tempo. Use filtros para reduzir o espaço de busca.
 - Thumbnails antigas: são mantidas em `.seamless-thumbnails/` por timestamp; podem ser reutilizadas/inspecionadas.
+- Raiz restrita: ao usar `--root` (ou `LOOP_ROOT_DIR`), qualquer tentativa de acessar fora da pasta retorna erro 400/403; verifique permissões e existência.
 
 ## Vídeos de Exemplo
 Você pode gerar um conjunto pequeno de vídeos sintéticos para testar a detecção de loops e combinações:
