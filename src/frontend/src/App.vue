@@ -12,7 +12,7 @@
       <!-- Explorador de Pastas -->
       <FileExplorer />
 
-      <pre>{{ JSON.stringify({ ...store }, null, 2) }}</pre>
+      <StoreInspector />
 
       <!-- Se uma pasta foi selecionada -->
       <div v-if="store.selectedFolder && store.allVideos.length > 0" class="space-y-16 animate-fade-in">
@@ -75,6 +75,7 @@ import VideoTable from './components/VideoTable.vue'
 import ResultsTable from './components/ResultsTable.vue'
 import ProgressOverlay from './components/ProgressOverlay.vue'
 import LoopPreview from './components/LoopPreview.vue'
+import StoreInspector from './components/StoreInspector.vue'
 
 const store = useLoopStore()
 const previewResult = ref<any>(null)
