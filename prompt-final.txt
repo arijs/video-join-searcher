@@ -1,0 +1,127 @@
+// Criado com Grok 4.1
+
+You are an expert full-stack Bun.js + Vue 3 developer. Build a high-performance, local-only desktop tool that helps users discover seamless video loops (including infinite self-loops) by visually comparing the last frame of one video with the first frame of another.
+
+Current date: November 18, 2025.
+
+### Project Requirements
+
+Create a complete, production-ready Bun + Vue 3 + Vite project with the following structure:
+
+seamless-video-loop-finder/
+├── src/
+│   ├── backend/
+│   │   ├── server.ts              # Bun.serve + WebSocket + API routes
+│   │   ├── filesystem.ts          # All fs operations (list, roots, stats)
+│   │   ├── metadata/
+│   │   │   ├── extractor.ts       # fluent-ffmpeg metadata + caching
+│   │   │   └── cache.ts           # Load/save .seamless-loop-cache.json
+│   │   ├── thumbnails/
+│   │   │   ├── generator.ts       # sharp + ffmpeg frame extraction
+│   │   │   └── manager.ts         # Ensure folder, naming, skip-if-unchanged
+│   │   ├── comparison/
+│   │   │   ├── engine.ts          # Main O(n²) loop with pause/resume
+│   │   │   └── pixelmatch.ts      # Wrapper around pixelmatch + threshold
+│   │   └── types.ts               # Shared TypeScript interfaces
+│   ├── frontend/
+│   │   ├── src/
+│   │   │   ├── App.vue
+│   │   │   ├── components/
+│   │   │   │   ├── FileExplorer.vue
+│   │   │   │   ├── FilterPanel.vue
+│   │   │   │   ├── VideoTable.vue
+│   │   │   │   ├── ResultsTable.vue
+│   │   │   │   ├── LoopPreview.vue
+│   │   │   │   └── ProgressOverlay.vue
+│   │   │   ├── stores/
+│   │   │   │   └── useLoopStore.ts  # Pinia store for global state
+│   │   │   └── main.ts
+│   └── vite-env.d.ts
+├── vite.config.ts
+├── package.json
+├── bunfig.toml                 # Optional: for better Bun + Vite interop
+└── README.md
+
+src/backend/
+├── routes/
+│   ├── select.ts          # POST /api/select
+│   ├── applyFilters.ts     # POST /api/apply-filters
+│   ├── compare.ts          # POST /api/compare
+│   ├── pause.ts            # POST /api/pause
+│   ├── thumbs.ts           # GET /thumbs/*
+│   └── file.ts             # GET /file* (preview de vídeo)
+├── handlers/
+│   ├── scanHandler.ts      # lógica de scan + metadata
+│   ├── filterHandler.ts    # aplicação de todos os filtros
+│   └── comparisonHandler.ts # geração de thumbs + comparação O(n²)
+├── server.ts               # só monta o servidor e importa rotas
+├── types.ts
+├── metadata.ts
+├── thumbnails.ts
+└── comparison.ts
+
+
+### Technical Constraints & Choices
+
+- Runtime: **Bun 1.1+** (use `Bun.serve`, `Bun.file`, native WebSocket)
+- Frontend: **Vue 3 + Vite 5+ (latest)** (script setup, composables, Pinia)
+- Video processing: **fluent-ffmpeg** + **@ffmpeg/core** (or ffmpeg-static)
+- Image processing: **sharp** (fastest resize)
+- Comparison: **pixelmatch**
+- Real-time updates: **Native WebSocket** (no polling, no htmx)
+- All backend functions must be **pure or small & focused**, easily unit-testable
+- Full TypeScript everywhere (strict mode)
+
+### Core Features (exactly as originally requested, no cuts)
+
+1. Full OS filesystem browser starting from root(s)
+   - Windows: show all drives
+   - Linux/macOS: start at /
+   - Click folders, breadcrumb, ".." button
+   - Button "Analyze this folder" → locks session to that path
+
+2. Advanced filtering panel (identical to original description)
+   - Multiple regex rules (positive/negative + target)
+   - Size, dates, duration, aspect ratio, resolution filters
+   - Big "APPLY FILTERS" button (manual trigger)
+   - Live counter of matched videos
+
+3. Smart metadata + thumbnail pipeline
+   - On first analysis: extract all file + video metadata with progress
+   - Cache everything in `.seamless-loop-cache.json` (auto-load on restart)
+   - Generate start/end thumbnails once → store in `.seamless-thumbnails/YYYY-MM-DD_HH-mm-ss/`
+   - Skip regeneration if file mtime unchanged
+
+4. "Find Seamless Joins" button
+   - Phase 1: ensure all thumbnails exist (progress bar)
+   - Phase 2: full pairwise comparison (including self-loops)
+     - Early skip if resolution differs
+     - Load PNGs from disk → pixelmatch → match %
+   - Real-time sortable table updated via WebSocket
+   - Slider: "Minimum match threshold" (80–99.9%, default 93%)
+   - Pause / Resume / Cancel buttons (fully functional)
+   - Progress: "Comparing 8,392 / 10,000 combinations · 47 loops found"
+
+5. Results table
+   - Columns: From → To | Match % | Resolution | Thumbnails side-by-side | Preview button
+   - Click row → modal with perfect seamless preview (two <video> elements synchronized)
+   - Color coding: ≥99.5% green, ≥97% gold
+
+6. Extra polish
+   - Export to CSV
+   - "Refresh cache" button
+   - Graceful error handling + console logs
+
+### Developer Requirements
+
+- Every backend file must export small, focused, pure functions where possible
+- All side-effect code (fs, ffmpeg) must be easily mockable for future tests
+- Use dependency injection pattern where it makes sense
+- Full JSDoc comments on public functions
+- Include a basic test example using Bun's built-in test runner
+
+Now generate the complete project with all files, ready to run with:
+```bash
+bun install
+bun run dev   # starts Vite dev server + Bun backend with hot reload
+```

@@ -1,0 +1,40 @@
+Develop a program using the Bun js runtime which objective is to find video files in a folder that could be joined in one seamless video, using a visual test to match the end frame of one video with the start frame of another video, or even the original video itself, which could create an infinite loop. Use a video library to get the frames from the videos that can run in windows, linux or mac.
+
+The program starts a localhost http server. The starting html page allows the user to navigate the files and folders of the OS, to select a folder. Only display the contents of one folder at a time, displaying the root of the file system, and allow the user to click a folder to navigate to it, and have a button to go back to the parent folder, or the root folder.
+
+Below the contents of the current folder, show some controls that allows the user to narrow down the search space. All rules are optional: 
+- First, a list where each row contains: (1) a text input where the user could type a regex filter, (2) a toggle between "positive" and "negative" match, and (3) a select to choose wether the regex is tested on (a) filename without extension, (b) only file extension, or (c) the full filename with extension. If the very first row is positive, we start assuming no files are matched, and add the files that matches the rules. If the very first row is negative, we start assuming all files are matched, and then proceed eliminating files that don't match all the defined rules.
+- Second, a minimum and maximum file size inputs, in decimal number of megabytes.
+- Third, a minimum and maximum file created date and modified date filters.
+- Fourth, a minimum and maximum video length time (if it contains a single number, parse as number of seconds. If it contains two numbers separated by a colon ":", parse as "minutes:seconds", and if it has three numbers, parse as "hours:minutes:seconds").
+- Fifth, a minimum and maximum video aspect ratio (if it only contains a single decimal number, it is interpreted as Width divided by Height. If it contains two numbers separated by a colon ":", divide the first by the second then use the result as the aspect ratio.)
+- Sixth, a minimum and maximum video frame width and height.
+
+Display a label above the filter controls, showing how many video files are matched with the current rules. If no filter is specified, all video files are matched. Only count the video extensions supported by the video library. Don't automatically recalculate when the filters change, because the filters could be expensive, especially if there are a lot of videos on the folder. The user must click a button to apply the filters and see the updated count.
+
+Use async file operations on the folder to get the file names, sizes and dates. Apply these file filters first. If the video filters are specified (length time, aspect ratio, width, height), where we need to parse the videos to get the information, then show a progress bar, and the number of processed and total video files checked, and update the videos matched count as this information becomes available. Store this data in memory to be used when the user starts the video thumbnail comparisons.
+
+After the filters are applied show two buttons:
+- A button to display a table with the videos details (index, file name, file size, video time length, video resolution).
+- A button to "Find Seamless Joins". When clicked, the program starts two phases:
+
+- First, it creates small thumbnails for the very first and the very last frames in the video. The thumbnails should keep aspect ratio but limit the biggest dimension to 80px, unless the smallest dimension is smaller than 32px, then keep smallest dimension at 32px while mantaining aspect ratio. But if one of the dimensions of the video is smaller than 32px, then generate the thumbnail at exactly the original dimensions of the video.
+  The thumbnails should be saved as PNG images to a "{__video_thumbnails__YYYY-MM-DD_HH-ii-ss}" folder inside the current video folder, with an ISO 8601 datetime in the name. Don't store these thumbnails on memory, only write to disk.
+  While in this phase, the program should display a progress bar and a label saying "Created X of Y thumbnails for Z videos" where X is the number of thumbnails saved, Y is the total number of thumbnails (2 for each video, one start and one end), and Z is the total of video files matched in the filters. Overwrite existing thumbnails.
+
+- Second, it proceeds with the visual comparisons. When testing each start frame with each ending frame, the first thing to check is if the video resolutions match. If not, stop further checks and skip to next combination.
+  If it matches, then compare the thumbnails with the "pixelmatch" library from mapbox. Reread and parse the thumbnail images from the file system. Don't store diff images, only use the returned number of mismatched pixels.
+  While in this phase, the program should display a progress bar and a label saying "Comparing X of Y video combinations" where X is the number of combinations checked, including early skipped ones, and Y is the total of combinations (the number of videos raised to the power of two).
+  Also display a report, a table of comparisons sorted by best match (the amount of pixels matched, which could be up to 100%) first, then sorted by initial file name, and then sorted by final file name.
+  In this table, display the name of initial video, name of final video, the resolution, the start and ending thumbnails, and the match percentage. Update this table in real time while the data becomes available.
+  Add a button to pause/resume the processing.
+
+// ------------
+
+ takes a folder of videos as input, create very small thumbnails (in a temporary created folder, but don't delete temp files after running) for the very first and the very last frame of the videos, and then produces a report of each combination between one start and one end frame.
+There are mainly two ways that frames are matched: First, by the aspect ratio. Combinations that don't match the aspect ratio are rejected and don't proceed the comparison. The second comparison is visual, between the start and end thumbnails. Use some library (
+Use some library (that runs on windows, linux, or mac) to render the frames from the videos.  Then, try to optimize the comparison between each first frame and each last frame thumbnails, first comparing by the dimensions
+
+----
+
+não vi no prompt atualizado a descrição completa da funcionalidade dos filtros de arquivos
