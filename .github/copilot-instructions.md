@@ -20,7 +20,7 @@ Arquitetura e pontos de extensão
 - Rotas HTTP em `src/backend/routes/`: `list`, `select`, `applyFilters`, `compare`, `pause`, `thumbs`, `file`.
 - Handlers em `src/backend/handlers/`:
   - `scanHandler.ts`: varre pasta selecionada e coleta metadados
-  - `filterHandler.ts`: aplica regras de regex e filtros (tamanho, datas, duração, AR, resolução)
+  - `filterHandler.ts`: aplica regras de regex e filtros (tamanho, datas, duração, AR, resolução) – documentação detalhada em `docs/filters.md`
   - `comparisonHandler.ts`: orquestra geração de thumbnails e comparação O(n²)
   - `topMatches.ts`: acompanha top-N matches
 - Utilitários:

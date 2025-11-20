@@ -38,9 +38,34 @@ export async function applyAllFilters(payload: FilterPayload): Promise<void> {
   let result: VideoFile[] = [...state.allVideos]
 
   // ===============================================================
+  // Validação prévia de regras regex (padrões vazios ou inválidos)
+  // Agora lançamos erro em vez de ignorar silenciosamente.
+  // ===============================================================
+  if (regexRules && regexRules.length > 0) {
+    const errors: string[] = []
+    regexRules.forEach((rule, idx) => {
+      const trimmed = rule.pattern.trim()
+      if (!trimmed) {
+        errors.push(`Regra ${idx + 1}: pattern vazio`)
+        return
+      }
+      try {
+        // Teste de compilação
+        // eslint-disable-next-line no-new
+        new RegExp(trimmed, 'i')
+      } catch (e) {
+        errors.push(`Regra ${idx + 1}: regex inválida (${rule.pattern})`)
+      }
+    })
+    if (errors.length > 0) {
+      throw new Error(`Erros nas regras regex: ${errors.join('; ')}`)
+    }
+  }
+
+  // ===============================================================
   // 1. Regras Regex – lógica idêntica à solicitada originalmente
   // ===============================================================
-  if (regexRules.length > 0 && regexRules.some(r => r.pattern.trim() !== '')) {
+  if (regexRules.length > 0) {
     const validRules = regexRules.filter(r => r.pattern.trim() !== '')
     const firstRulePositive = validRules[0].mode === 'positive'
 

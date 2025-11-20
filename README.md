@@ -130,6 +130,7 @@ src/
 - `server.ts` expõe HTTP (3001) e WebSocket (3002) e mantém estado (`selectedFolder`, `allVideos`, `filteredVideos`). Suporta modo de raiz restrita via argumento `--root=CAMINHO` ou variável de ambiente `LOOP_ROOT_DIR`; quando ativo, a navegação/listagem fica confinada à pasta informada.
 - `scanHandler.ts` varre a pasta e, para arquivos de vídeo suportados, chama `getVideoMetadata` que usa `ffprobe` (duração e resolução).
 - `filterHandler.ts` aplica regras de regex conforme especificado (primeira regra define modo base) e filtros por tamanho/datas/duração/aspect/resolução.
+  - Documentação detalhada dos filtros: ver `docs/filters.md`.
 - `thumbnails.ts` cria os PNGs usando `ffmpeg`, respeitando as regras de dimensionamento.
 - `comparison.ts` compara os PNGs carregados do disco via `pixelmatch`, com `diff` opcional salvo somente se `match ≥ threshold`.
 - `comparisonHandler.ts` orquestra as duas fases, envia progresso/resultados pelo WebSocket e respeita pausa/cancelamento.
