@@ -9,8 +9,8 @@ import handleCompare from './routes/compare'
 import handlePause from './routes/pause'
 import handleThumbs from './routes/thumbs'
 import handleFile from './routes/file'
-import type { VideoFile } from './types'
 import handleList from './routes/list'
+import type { VideoFile } from './types'
 
 // ===================================================================
 // Estado global centralizado e fortemente tipado
@@ -36,18 +36,18 @@ export const state = new AppState()
 function resolveRootFromArgs(): string {
   const arg = Bun.argv.find(a => a.startsWith('--root='))
   const envRoot = process.env.LOOP_ROOT_DIR
-  const raw = envRoot || (arg ? arg.slice('--root='.length) : '')
+  const raw = (arg ? arg.slice('--root='.length) : null) || envRoot
   if (!raw) return ''
   try {
     const resolved = pathResolve(raw)
     if (!existsSync(resolved) || !statSync(resolved).isDirectory()) {
       console.error('[rootFolder] Caminho inválido informado, ignorando:', raw)
-      return ''
+      process.exit(1001)
     }
     return resolved
   } catch (e) {
     console.error('[rootFolder] Erro ao validar pasta raiz:', e)
-    return ''
+    process.exit(1002)
   }
 }
 
